@@ -1,4 +1,6 @@
-from sqlalchemy import Boolean, String
+from datetime import datetime
+
+from sqlalchemy import Boolean, DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .database import Base
@@ -16,3 +18,7 @@ class Post(Base):
     content: Mapped[str] = mapped_column(String)
     # need to place server default as we need to maintain it from server
     published: Mapped[bool] = mapped_column(Boolean, server_default="true")
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
