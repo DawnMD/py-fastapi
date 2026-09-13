@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from app.db.database import Base, engine
 from app.db.models import Post
+from app.db.schemas import PostCreate
 from app.dependencies import DbSession
 
 app = FastAPI()
@@ -18,13 +19,6 @@ def get_all_post(db: DbSession):
     statement = select(Post)
     data = db.scalars(statement).all()
     return {"data": data}
-
-
-# need to make a type class as we cannot use sqlalchemy class directly as type
-class PostCreate(BaseModel):
-    title: str
-    content: str
-    published: bool = True
 
 
 @app.post("/create", status_code=status.HTTP_201_CREATED)
