@@ -1,12 +1,13 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, Session
+from sqlalchemy.orm import DeclarativeBase, MappedAsDataclass, Session
 
 DB_URL = "postgresql://postgres:admin@localhost:5432/pyfastapi"
 
 engine = create_engine(DB_URL, echo=True)
 
 
-class Base(DeclarativeBase):
+# MappedAsDataclass to init the mapped types for autocomplete
+class Base(MappedAsDataclass, DeclarativeBase):
     pass
 
 
