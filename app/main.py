@@ -33,6 +33,30 @@ def create_post(post: PostCreate, db: DbSession):
     return {"data": new_post}
 
 
+@app.get("/post/{post_id}")
+def get_post_by_id(post_id: int, db: DbSession):
+    statement = select(Post).where(Post.id == post_id)
+
+    data = db.scalar(statement)
+
+    if not data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    return {"data": data}
+
+
+@app.delete("/post/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_post_by_id(post_id: int, db: DbSession):
+    statement = select(Post).where(Post.id == post_id)
+    data = db.scalar(statement)
+
+    if not data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    db.delete(data)
+    db.commit()
+
+
 fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
 
 
