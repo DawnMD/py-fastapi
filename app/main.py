@@ -1,8 +1,54 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
+from pydantic import BaseModel
 
 app = FastAPI()
 
+fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
+
 
 @app.get("/")
-def read_root():
-    return {"Hello": "World"}
+def root():
+    return "Hello World"
+
+
+@app.get("/path_params/{path_name}")
+def path_by_name(path_name: str):
+    return {"path": path_name}
+
+
+# auto parse and convert string to int
+@app.get("/items/{item_id}")
+def path_by_item(item_id: int):
+    return fake_items_db[item_id]
+
+
+# query params with optional and default values
+@app.get("/query")
+def with_query(skip: int = 0, limit: int = 10, q: str | None = None):
+    data = fake_items_db[skip : skip + limit]
+
+    if q:
+        data.append({"q": q})
+
+    return data
+
+
+# post req with body
+# body only available in post type req
+class Item(BaseModel):
+    id: int
+    name: str
+    verified: bool | None = False
+
+
+@app.post("/with_body", status_code=status.HTTP_201_CREATED)
+def return_with_body(item: Item):
+    return item
+
+
+# updated error handling
+@app.get("/error")
+def get_error(error: bool):
+    if error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Hell yeah")
+    return "Nopes"
