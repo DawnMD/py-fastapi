@@ -14,4 +14,5 @@ class Post(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String)
     content: Mapped[str] = mapped_column(String)
-    published: Mapped[bool] = mapped_column(Boolean, default=True)
+    # need to place server default as we need to maintain it from server
+    published: Mapped[bool] = mapped_column(Boolean, server_default="true")
