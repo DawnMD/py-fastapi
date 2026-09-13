@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from pydantic import EmailStr
 from sqlalchemy import Boolean, DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -23,6 +24,17 @@ class Post(Base):
     published: Mapped[bool] = mapped_column(
         Boolean, server_default="true", default=True
     )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), init=False
+    )
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
+    email: Mapped[EmailStr] = mapped_column(String, unique=True)
+    password: Mapped[str] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), init=False
     )
