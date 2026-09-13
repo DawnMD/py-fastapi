@@ -12,12 +12,26 @@ app = FastAPI()
 Base.metadata.create_all(engine)
 
 
-@app.get("/all")
+@app.get("/posts")
 # Need to pass db session as param
 def get_all_post(db: DbSession):
     statement = select(Post)
     data = db.scalars(statement).all()
     return {"data": data}
+
+
+@app.post("/create", status_code=status.HTTP_201_CREATED)
+def create_post(title: str, content: str, db: DbSession):
+    new_post = Post(
+        title=title,
+        content=content,
+    )
+
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
+
+    return {"data": new_post}
 
 
 fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
