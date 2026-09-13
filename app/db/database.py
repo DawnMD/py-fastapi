@@ -10,6 +10,7 @@ class Base(DeclarativeBase):
     pass
 
 
+# automatically create session and close on done
 def get_db():
     with Session(engine, autocommit=False, autoflush=False) as session:
         yield session
