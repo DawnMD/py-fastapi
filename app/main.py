@@ -1,22 +1,15 @@
-from typing import Annotated
-
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
-from app.db.database import Base, engine, get_db
+from app.db.database import Base, engine
 from app.db.models import Post
+from app.dependencies import DbSession
 
 app = FastAPI()
 
 # To create the tables/ models from code
 Base.metadata.create_all(engine)
-
-DbSession = Annotated[
-    Session,
-    Depends(get_db),
-]
 
 
 @app.get("/all")
@@ -24,7 +17,7 @@ DbSession = Annotated[
 def get_all_post(db: DbSession):
     statement = select(Post)
     data = db.scalars(statement).all()
-    return data
+    return {"data": data}
 
 
 fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
