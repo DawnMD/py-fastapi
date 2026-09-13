@@ -1,7 +1,31 @@
-from fastapi import FastAPI, HTTPException, status
+from typing import Annotated
+
+from fastapi import Depends, FastAPI, HTTPException, status
 from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.db.database import Base, engine, get_db
+from app.db.models import Post
 
 app = FastAPI()
+
+# To create the tables/ models from code
+Base.metadata.create_all(engine)
+
+DbSession = Annotated[
+    Session,
+    Depends(get_db),
+]
+
+
+@app.get("/all")
+# Need to pass db session as param
+def get_all_post(db: DbSession):
+    statement = select(Post)
+    data = db.scalars(statement).all()
+    return data
+
 
 fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
 
