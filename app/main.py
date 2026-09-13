@@ -20,12 +20,17 @@ def get_all_post(db: DbSession):
     return {"data": data}
 
 
+# need to make a type class as we cannot use sqlalchemy class directly as type
+class PostCreate(BaseModel):
+    title: str
+    content: str
+    published: bool = True
+
+
 @app.post("/create", status_code=status.HTTP_201_CREATED)
-def create_post(title: str, content: str, db: DbSession):
-    new_post = Post(
-        title=title,
-        content=content,
-    )
+def create_post(post: PostCreate, db: DbSession):
+    # spreading the model data, spreading
+    new_post = Post(**post.model_dump())
 
     db.add(new_post)
     db.commit()
