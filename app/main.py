@@ -4,7 +4,7 @@ from sqlalchemy import select
 
 from app.db.database import Base, engine
 from app.db.models import Post
-from app.db.schemas import PostCreate
+from app.db.schemas import Post as PostSchema
 from app.dependencies import DbSession
 
 app = FastAPI()
@@ -21,8 +21,8 @@ def get_all_post(db: DbSession):
     return {"data": data}
 
 
-@app.post("/create", status_code=status.HTTP_201_CREATED)
-def create_post(post: PostCreate, db: DbSession):
+@app.post("/create", status_code=status.HTTP_201_CREATED, response_model=PostSchema)
+def create_post(post: PostSchema, db: DbSession):
     # spreading the model data, spreading
     new_post = Post(**post.model_dump())
 
@@ -30,7 +30,7 @@ def create_post(post: PostCreate, db: DbSession):
     db.commit()
     db.refresh(new_post)
 
-    return {"data": new_post}
+    return new_post
 
 
 @app.get("/post/{post_id}")
