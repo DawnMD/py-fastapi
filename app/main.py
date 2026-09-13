@@ -90,3 +90,11 @@ def create_user(user: UserCreate, db: DbSession):
     db.refresh(statement)
 
     return statement
+
+
+@app.get("/users/{user_id}", response_model=UserBase)
+def get_user_by_id(user_id: int, db: DbSession):
+    statement = select(User).where(User.id == user_id)
+    data = db.scalar(statement)
+
+    return data
