@@ -11,12 +11,9 @@ from sqlalchemy.orm import load_only
 
 from app.db.models import User
 from app.dependencies import DbSession
+from app.settings import settings
 
 ph = PasswordHasher()
-
-SECRET_KEY = "e3d17ccb64a6e0338fc11537a3a0032d8f9a64557cd1915bbd43dec2e710b135"
-EXPIRE_IN_MINS = 30
-ALGORITHM = "HS256"
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
@@ -40,8 +37,8 @@ def create_access_token(data: dict[str, Any]):
 
     return jwt.encode(  # type: ignore
         payload=to_encode,
-        key=SECRET_KEY,
-        algorithm=ALGORITHM,
+        key=settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM,
     )
 
 
@@ -64,8 +61,8 @@ def verify_token(token: str, exception: HTTPException):
     try:
         payload = jwt.decode(  # type: ignore
             jwt=token,
-            key=SECRET_KEY,
-            algorithms=[ALGORITHM],
+            key=settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
         )
 
         user_id = payload.get("id")
