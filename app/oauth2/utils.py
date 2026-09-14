@@ -7,6 +7,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel, EmailStr, ValidationError
 from sqlalchemy import select
+from sqlalchemy.orm import load_only
 
 from app.db.models import User
 from app.dependencies import DbSession
@@ -30,7 +31,7 @@ class TokenData(BaseModel):
     email: EmailStr | None = None
 
 
-def create_access_token(data: dict[str, Any]) -> str:
+def create_access_token(data: dict[str, Any]):
     to_encode = data.copy()
 
     expire = datetime.now(UTC) + timedelta(minutes=30)
@@ -91,7 +92,7 @@ def get_current_user(
 
     token_data = verify_token(token=token, exception=credentials_exception)
 
-    statement = select(User).where(User.id == token_data.id)
+    statement = select(User).options(load_only(User.id)).where(User.id == token_data.id)
     db_user = db.scalar(statement)
 
     if not db_user:
