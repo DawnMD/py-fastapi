@@ -1,9 +1,12 @@
-from fastapi import APIRouter, HTTPException, status
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 
 from app.db.models import Post
 from app.db.schemas import Post as PostSchema
 from app.dependencies import DbSession
+from app.oauth2.utils import get_current_user
 
 router = APIRouter(prefix="/posts", tags=["Post"])
 
@@ -16,8 +19,16 @@ def get_all_post(db: DbSession):
     return data
 
 
-@router.post("/posts", status_code=status.HTTP_201_CREATED, response_model=PostSchema)
-def create_post(post: PostSchema, db: DbSession):
+@router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=PostSchema,
+)
+def create_post(
+    post: PostSchema,
+    db: DbSession,
+    email: Annotated[str, Depends(get_current_user)],
+):
     # spreading the model data, spreading
     new_post = Post(**post.model_dump())
 
@@ -29,7 +40,11 @@ def create_post(post: PostSchema, db: DbSession):
 
 
 @router.get("/{post_id}", response_model=PostSchema)
-def get_post_by_id(post_id: int, db: DbSession):
+def get_post_by_id(
+    post_id: int,
+    db: DbSession,
+    email: Annotated[str, Depends(get_current_user)],
+):
     statement = select(Post).where(Post.id == post_id)
 
     data = db.scalar(statement)
@@ -41,7 +56,11 @@ def get_post_by_id(post_id: int, db: DbSession):
 
 
 @router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post_by_id(post_id: int, db: DbSession):
+def delete_post_by_id(
+    post_id: int,
+    db: DbSession,
+    email: Annotated[str, Depends(get_current_user)],
+):
     statement = select(Post).where(Post.id == post_id)
     data = db.scalar(statement)
 
@@ -53,7 +72,12 @@ def delete_post_by_id(post_id: int, db: DbSession):
 
 
 @router.put("/{post_id}", response_model=PostSchema)
-def update_post_by_id(post_id: int, post: PostSchema, db: DbSession):
+def update_post_by_id(
+    post_id: int,
+    post: PostSchema,
+    db: DbSession,
+    email: Annotated[str, Depends(get_current_user)],
+):
     statement = select(Post).where(Post.id == post_id)
 
     data = db.scalar(statement)
