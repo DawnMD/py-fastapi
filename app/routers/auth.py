@@ -1,29 +1,23 @@
-from argon2 import PasswordHasher
-from fastapi import APIRouter, HTTPException, status
-from sqlalchemy import select
+from typing import Annotated
 
-from app.db.models import User
-from app.db.schemas import UserCreate
+from argon2 import PasswordHasher
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+
 from app.dependencies import DbSession
-from app.utils import create_access_token
+from app.utils import Token, check_user_creds, create_access_token
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 ph = PasswordHasher()
 
 
-@router.post("/login")
-def login(user: UserCreate, db: DbSession):
-    statement = select(User).where(User.email == user.email)
-    db_user = db.scalar(statement)
+@router.post("/login", response_model=Token)
+def login(user: Annotated[OAuth2PasswordRequestForm, Depends()], db: DbSession):
+    valid_user = check_user_creds(username=user.username, password=user.password, db=db)
 
-    if not db_user:
+    if not valid_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    verify = ph.verify(password=user.password, hash=db_user.password)
+    token = create_access_token({"email": valid_user.email, "id": valid_user.id})
 
-    if not verify:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
-    token = create_access_token({"email": db_user.email})
-
-    return token
+    return {"access_token": token, "token_type": "Bearer"}
