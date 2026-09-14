@@ -79,11 +79,22 @@ def verify_token(token: str, exception: HTTPException):
         raise exception
 
 
-def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+def get_current_user(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: DbSession,
+):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    return verify_token(token=token, exception=credentials_exception)
+    token_data = verify_token(token=token, exception=credentials_exception)
+
+    statement = select(User).where(User.id == token_data.id)
+    db_user = db.scalar(statement)
+
+    if not db_user:
+        raise credentials_exception
+
+    return db_user
