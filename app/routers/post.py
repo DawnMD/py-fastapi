@@ -1,0 +1,70 @@
+from fastapi import APIRouter, HTTPException, status
+from sqlalchemy import select
+
+from app.db.models import Post
+from app.db.schemas import Post as PostSchema
+from app.dependencies import DbSession
+
+router = APIRouter(prefix="/posts", tags=["Post"])
+
+
+@router.get("/", response_model=list[PostSchema])
+# Need to pass db session as param
+def get_all_post(db: DbSession):
+    statement = select(Post)
+    data = db.scalars(statement).all()
+    return data
+
+
+@router.post("/posts", status_code=status.HTTP_201_CREATED, response_model=PostSchema)
+def create_post(post: PostSchema, db: DbSession):
+    # spreading the model data, spreading
+    new_post = Post(**post.model_dump())
+
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post)
+
+    return new_post
+
+
+@router.get("/{post_id}", response_model=PostSchema)
+def get_post_by_id(post_id: int, db: DbSession):
+    statement = select(Post).where(Post.id == post_id)
+
+    data = db.scalar(statement)
+
+    if not data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    return data
+
+
+@router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_post_by_id(post_id: int, db: DbSession):
+    statement = select(Post).where(Post.id == post_id)
+    data = db.scalar(statement)
+
+    if not data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    db.delete(data)
+    db.commit()
+
+
+@router.put("/{post_id}", response_model=PostSchema)
+def update_post_by_id(post_id: int, post: PostSchema, db: DbSession):
+    statement = select(Post).where(Post.id == post_id)
+
+    data = db.scalar(statement)
+
+    if not data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    data.content = post.content
+    data.title = post.title
+
+    db.commit()
+    db.refresh(data)
+
+    return data
