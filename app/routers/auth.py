@@ -20,4 +20,4 @@ def login(user: Annotated[OAuth2PasswordRequestForm, Depends()], db: DbSession):
 
     token = create_access_token({"email": valid_user.email, "id": valid_user.id})
 
-    return Token(access_token=token, token_type="Bearer")
+    return Token(access_token=token, token_type="bearer")
