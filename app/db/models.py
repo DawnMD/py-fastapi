@@ -27,6 +27,12 @@ class Post(Base):
         back_populates="posts",
         init=False,
     )
+    likes: Mapped[list[PostLike]] = relationship(
+        back_populates="post",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        init=False,
+    )
     published: Mapped[bool] = mapped_column(
         Boolean, server_default="true", default=True
     )
@@ -47,6 +53,42 @@ class User(Base):
         passive_deletes=True,
         init=False,
     )
+    post_likes: Mapped[list[PostLike]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        init=False,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), init=False
+    )
+
+
+class PostLike(Base):
+    __tablename__ = "post_likes"
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+    post_id: Mapped[int] = mapped_column(
+        ForeignKey("posts.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        init=False,
+    )
+
+    user: Mapped[User] = relationship(
+        back_populates="post_likes",
+        init=False,
+    )
+
+    post: Mapped[Post] = relationship(
+        back_populates="likes",
+        init=False,
     )
